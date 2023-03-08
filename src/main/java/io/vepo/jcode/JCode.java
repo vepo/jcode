@@ -5,12 +5,15 @@ import static java.util.logging.Level.SEVERE;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.attribute.FileTime;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 
 import javafx.application.Application;
@@ -22,6 +25,7 @@ import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.FileChooser;
@@ -45,7 +49,8 @@ public class JCode extends Application {
         openItem.setOnAction(evnt -> {
             FileChooser fileChooser = new FileChooser();
             // only allow text files to be selected using chooser
-            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Text files (*.txt)", "*.txt"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Java File (*.java)", "*.java"));
+            fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Java C (*.c)", "*.c"));
             // set initial directory somewhere user will recognise
             fileChooser.setInitialDirectory(new File(System.getProperty("user.home")));
             // let user select file
@@ -59,6 +64,17 @@ public class JCode extends Application {
 
         MenuItem saveItem = new MenuItem();
         saveItem.setText("Save");
+        saveItem.setOnAction(evnt -> {
+            try {
+                try (FileWriter myWriter = new FileWriter(loadedFileReference)) {
+                    myWriter.write(textArea.getText());
+                    lastModifiedTime = FileTime.fromMillis(System.currentTimeMillis() + 3000);
+                    System.out.println("Successfully wrote to the file.");
+                }
+            } catch (IOException e) {
+                Logger.getLogger(getClass().getName()).log(SEVERE, null, e);
+            }
+        });
         fileMenu.getItems().addAll(saveItem);
 
         MenuItem closeItem = new MenuItem();
@@ -70,7 +86,21 @@ public class JCode extends Application {
         Scene scene = new Scene(pane, 300, 250);
 
         textArea = new CodeArea();
-        pane.setCenter(textArea);
+
+
+        VirtualizedScrollPane<CodeArea> sp = new VirtualizedScrollPane<>(textArea);
+        AnchorPane        anchorPane = new AnchorPane();
+        anchorPane.getChildren().add(sp);
+    
+        anchorPane.setLeftAnchor(sp, 0.0);
+        anchorPane.setRightAnchor(sp, 0.0);
+        anchorPane.setBottomAnchor(sp, 0.0);
+        anchorPane.setTopAnchor(sp, 0.0);
+    
+        textArea.prefWidthProperty().bind(anchorPane.widthProperty());
+        textArea.prefHeightProperty().bind(anchorPane.heightProperty());
+
+        pane.setCenter(anchorPane);
 
         HBox rule = new HBox();
         progressBar = new ProgressBar();
@@ -88,23 +118,24 @@ public class JCode extends Application {
         Task<String> loadFileTask = new Task<>() {
             @Override
             protected String call() throws Exception {
-                BufferedReader reader = new BufferedReader(new FileReader(fileToLoad));
-                // Use Files.lines() to calculate total lines - used for progress
-                long lineCount;
-                try (Stream<String> stream = Files.lines(fileToLoad.toPath())) {
-                    lineCount = stream.count();
+                try (BufferedReader reader = new BufferedReader(new FileReader(fileToLoad))) {
+                    // Use Files.lines() to calculate total lines - used for progress
+                    long lineCount;
+                    try (Stream<String> stream = Files.lines(fileToLoad.toPath())) {
+                        lineCount = stream.count();
+                    }
+                    // Load in all lines one by one into a StringBuilder separated by "\n" -
+                    // compatible with TextArea
+                    String line;
+                    StringBuilder totalFile = new StringBuilder();
+                    long linesLoaded = 0;
+                    while ((line = reader.readLine()) != null) {
+                        totalFile.append(line);
+                        totalFile.append("\n");
+                        updateProgress(++linesLoaded, lineCount);
+                    }
+                    return totalFile.toString();
                 }
-                // Load in all lines one by one into a StringBuilder separated by "\n" -
-                // compatible with TextArea
-                String line;
-                StringBuilder totalFile = new StringBuilder();
-                long linesLoaded = 0;
-                while ((line = reader.readLine()) != null) {
-                    totalFile.append(line);
-                    totalFile.append("\n");
-                    updateProgress(++linesLoaded, lineCount);
-                }
-                return totalFile.toString();
             }
         };
         // If successful, update the text area, display a success message and store the
