@@ -23,6 +23,7 @@ public class WorkspaceView extends StackPane {
 
         treeViewer = new TreeView<>();
         btnOpenWorkspace = new Button("Open");
+        btnOpenWorkspace.setId("open-workspace");
 
         setAlignment(treeViewer, Pos.TOP_LEFT);
         setMargin(treeViewer, new Insets(0, 0, 0, 0));
