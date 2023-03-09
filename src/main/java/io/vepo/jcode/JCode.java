@@ -11,8 +11,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
+import io.vepo.jcode.controls.FixedSplitPane;
 import io.vepo.jcode.events.FileLoadEvent;
 import io.vepo.jcode.events.TaskStartedEvent;
+import io.vepo.jcode.workspace.WorkspaceRoot;
+import io.vepo.jcode.workspace.WorkspaceView;
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
@@ -35,6 +38,7 @@ public class JCode extends Application {
     private CodeEditor codeEditor;
 
     private Workbench workbench;
+    private WorkspaceView workspace;
 
     public JCode() {
         workbench = new Workbench();
@@ -46,14 +50,9 @@ public class JCode extends Application {
         pane.setTop(new JCodeMenu(workbench));
         Scene scene = new Scene(pane, 300, 250);
 
-        SplitPane mainPane = new SplitPane();
-        final StackPane sp1 = new StackPane();
-        sp1.setPrefWidth(120);
-        sp1.getChildren().add(new Button("test"));
-
         codeEditor = new CodeEditor();
-        mainPane.getItems().addAll(sp1, codeEditor);
-        pane.setCenter(mainPane);
+        workspace = new WorkspaceView(workbench);
+        pane.setCenter(new FixedSplitPane(workspace, codeEditor));
 
         HBox rule = new HBox();
         progressBar = new ProgressBar();

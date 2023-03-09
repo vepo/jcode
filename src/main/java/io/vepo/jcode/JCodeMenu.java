@@ -1,18 +1,12 @@
 package io.vepo.jcode;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.attribute.FileTime;
 
-import static java.util.logging.Level.SEVERE;
+import io.vepo.jcode.events.FileLoadEvent;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.stage.FileChooser;
-import java.util.logging.Logger;
-
-import io.vepo.jcode.events.FileLoadEvent;
 
 public class JCodeMenu extends MenuBar {
     private static Menu createFileMenu(Workbench workbench) {
