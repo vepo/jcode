@@ -19,15 +19,18 @@ import org.fxmisc.richtext.CodeArea;
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -87,20 +90,25 @@ public class JCode extends Application {
 
         textArea = new CodeArea();
 
+        SplitPane mainPane = new SplitPane();
+        final StackPane sp1 = new StackPane();
+        sp1.setPrefWidth(120);
+        sp1.getChildren().add(new Button("test"));
 
         VirtualizedScrollPane<CodeArea> sp = new VirtualizedScrollPane<>(textArea);
-        AnchorPane        anchorPane = new AnchorPane();
+        AnchorPane anchorPane = new AnchorPane();
         anchorPane.getChildren().add(sp);
-    
-        anchorPane.setLeftAnchor(sp, 0.0);
-        anchorPane.setRightAnchor(sp, 0.0);
-        anchorPane.setBottomAnchor(sp, 0.0);
-        anchorPane.setTopAnchor(sp, 0.0);
-    
+
+        AnchorPane.setLeftAnchor(sp, 0.0);
+        AnchorPane.setRightAnchor(sp, 0.0);
+        AnchorPane.setBottomAnchor(sp, 0.0);
+        AnchorPane.setTopAnchor(sp, 0.0);
+
         textArea.prefWidthProperty().bind(anchorPane.widthProperty());
         textArea.prefHeightProperty().bind(anchorPane.heightProperty());
 
-        pane.setCenter(anchorPane);
+        mainPane.getItems().addAll(sp1, sp);
+        pane.setCenter(mainPane);
 
         HBox rule = new HBox();
         progressBar = new ProgressBar();
