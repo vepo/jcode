@@ -1,5 +1,6 @@
-package io.vepo.jcode;
+package io.vepo.jcode.controls;
 
+import io.vepo.jcode.Workbench;
 import io.vepo.jcode.events.CloseWorkspaceEvent;
 import io.vepo.jcode.events.SelectWorkspaceEvent;
 import javafx.scene.control.Menu;

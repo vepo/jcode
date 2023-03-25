@@ -1,24 +1,33 @@
 package io.vepo.jcode;
 
+import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
+
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.util.concurrent.ExecutionException;
+import java.util.prefs.Preferences;
 import java.util.stream.Stream;
 
+import io.vepo.jcode.controls.CodeEditor;
 import io.vepo.jcode.controls.FixedSplitPaneBuilder;
+import io.vepo.jcode.controls.JCodeMenuBuilder;
 import io.vepo.jcode.events.FileLoadEvent;
 import io.vepo.jcode.events.TaskStartedEvent;
 import io.vepo.jcode.workspace.WorkspaceViewBuilder;
 import javafx.application.Application;
 import javafx.concurrent.Task;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
+import jfxtras.styles.jmetro.JMetro;
+import jfxtras.styles.jmetro.Style;
 
 // https://edencoding.com/how-to-open-edit-sync-and-save-a-text-file-in-javafx/
 public class JCode extends Application {
@@ -38,7 +47,54 @@ public class JCode extends Application {
     public void start(Stage primaryStage) {
         BorderPane pane = new BorderPane();
         pane.setTop(JCodeMenuBuilder.build(workbench));
-        Scene scene = new Scene(pane, 300, 250);
+
+        Preferences windowPrefs = preferences().userRoot().node("window");
+        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
+
+        double x = windowPrefs.getDouble("x", Double.NEGATIVE_INFINITY);
+        double y = windowPrefs.getDouble("y", Double.NEGATIVE_INFINITY);
+        if (x > 0) {
+            primaryStage.setX(x);
+        }
+
+        if (y > 0) {
+            primaryStage.setY(y);
+        }
+
+        Scene scene = new Scene(pane,
+                                windowPrefs.getDouble("width", screenBounds.getWidth() - 50),
+                                windowPrefs.getDouble("height", screenBounds.getHeight() - 50));
+        primaryStage.setMaximized(windowPrefs.getBoolean("maximized", true));
+
+        primaryStage.maximizedProperty()
+                    .addListener((observable, oldValue, newValue) -> windowPrefs.putBoolean("maximized", newValue));
+        primaryStage.xProperty()
+                    .addListener((observable, oldValue, newValue) -> {
+                        if (!primaryStage.isMaximized()) {
+                            windowPrefs.putDouble("x", newValue.doubleValue());
+                        }
+                    });
+        primaryStage.yProperty()
+                    .addListener((observable, oldValue, newValue) -> {
+                        if (!primaryStage.isMaximized()) {
+                            windowPrefs.putDouble("y", newValue.doubleValue());
+                        }
+                    });
+        scene.widthProperty()
+             .addListener((observable, oldValue, newValue) -> {
+                 if (!primaryStage.isMaximized()) {
+                     windowPrefs.putDouble("width", newValue.doubleValue());
+                 }
+             });
+        scene.heightProperty()
+             .addListener((observable, oldValue, newValue) -> {
+                 if (!primaryStage.isMaximized()) {
+                     windowPrefs.putDouble("height", newValue.doubleValue());
+                 }
+             });
+
+        JMetro jMetro = new JMetro(Style.DARK);
+        jMetro.setScene(scene);
 
         codeEditor = new CodeEditor();
         workspace = WorkspaceViewBuilder.build(workbench);
