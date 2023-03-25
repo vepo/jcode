@@ -1,5 +1,10 @@
 package io.vepo.jcode;
 
+import static javafx.scene.layout.AnchorPane.setBottomAnchor;
+import static javafx.scene.layout.AnchorPane.setLeftAnchor;
+import static javafx.scene.layout.AnchorPane.setRightAnchor;
+import static javafx.scene.layout.AnchorPane.setTopAnchor;
+
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 
@@ -13,13 +18,14 @@ public class CodeEditor extends VirtualizedScrollPane<CodeArea> {
     }
 
     private void setup() {
+        getContent().setId("codeArea");
         AnchorPane anchorPane = new AnchorPane();
         anchorPane.getChildren().add(this);
 
-        AnchorPane.setLeftAnchor(this, 0.0);
-        AnchorPane.setRightAnchor(this, 0.0);
-        AnchorPane.setBottomAnchor(this, 0.0);
-        AnchorPane.setTopAnchor(this, 0.0);
+        setLeftAnchor(this, 0.0);
+        setRightAnchor(this, 0.0);
+        setBottomAnchor(this, 0.0);
+        setTopAnchor(this, 0.0);
 
         getContent().prefWidthProperty().bind(anchorPane.widthProperty());
         getContent().prefHeightProperty().bind(anchorPane.heightProperty());
