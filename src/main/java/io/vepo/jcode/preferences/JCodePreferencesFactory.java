@@ -6,7 +6,6 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
-import java.util.prefs.Preferences;
 import java.util.prefs.PreferencesFactory;
 
 public class JCodePreferencesFactory implements PreferencesFactory {
@@ -21,21 +20,18 @@ public class JCodePreferencesFactory implements PreferencesFactory {
             }
 
             preferencesFile = prefsFile.toFile();
-            System.out.println("Exists? " + preferencesFile.getParent() + " "
-                    + preferencesFile.getParentFile().exists());
-            System.out.println("Preferences file is " + preferencesFile);
             logger.finer("Preferences file is " + preferencesFile);
         }
         return preferencesFile;
     }
 
-    private Preferences rootPreferences;
+    private JsonPreferences rootPreferences;
 
-    public Preferences systemRoot() {
+    public JsonPreferences systemRoot() {
         return userRoot();
     }
 
-    public Preferences userRoot() {
+    public JsonPreferences userRoot() {
         if (rootPreferences == null) {
             logger.finer("Instantiating root preferences");
 

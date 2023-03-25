@@ -4,6 +4,9 @@ import static java.util.Objects.nonNull;
 
 import java.io.File;
 
+import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.themify.Themify;
+
 import javafx.scene.control.TreeItem;
 import javafx.util.StringConverter;
 
@@ -13,8 +16,8 @@ public class WorkspaceRoot extends TreeItem<File> {
         return new TreeItem<>(null);
     }
 
-    public static TreeItem<File> forRoot(File root) {
-        return new WorkspaceRoot(root);
+    public static TreeItem<File> forRoot(File root, FileFilter fileFilter) {
+        return new WorkspaceRoot(root, fileFilter);
     }
 
     public static StringConverter<File> converter() {
@@ -37,19 +40,21 @@ public class WorkspaceRoot extends TreeItem<File> {
         };
     }
 
-    private static void fillTree(File file, TreeItem<File> item) {
+    private static void fillTree(File file, TreeItem<File> item, FileFilter fileFilter) {
         if (nonNull(file) && file.isDirectory()) {
             for (File child : file.listFiles()) {
-                TreeItem<File> childItem = new TreeItem<File>(child);
-                item.getChildren().add(childItem);
-                fillTree(child, childItem);
+                if (!fileFilter.ignore(child)) {
+                    TreeItem<File> childItem = new TreeItem<File>(child);
+                    item.getChildren().add(childItem);
+                    fillTree(child, childItem, fileFilter);
+                }
             }
         }
     }
 
-    public WorkspaceRoot(File root) {
-        super(root);
-        fillTree(root, this);
+    public WorkspaceRoot(File root, FileFilter fileFilter) {
+        super(root, FontIcon.of(Themify.FOLDER));
+        fillTree(root, this, fileFilter);
     }
 
     public String getFilename() {

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import io.vepo.jcode.events.Event;
+import io.vepo.jcode.preferences.JCodePreferencesFactory;
+import io.vepo.jcode.workspace.FileFilter;
 
 public class Workbench {
 
@@ -24,6 +26,10 @@ public class Workbench {
     public <T extends Event> void emit(T event) {
         eventSubscribers.computeIfAbsent(event.getClass(), __ -> new ArrayList<>(1))
                         .forEach(callback -> ((Consumer<T>) callback).accept(event));
+    }
+
+    public FileFilter fileFilter() {
+        return new FileFilter(JCodePreferencesFactory.preferences().userRoot().getList("workspaceFilder"));
     }
 
 }

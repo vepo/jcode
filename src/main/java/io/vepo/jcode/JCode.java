@@ -14,18 +14,14 @@ import java.util.stream.Stream;
 import io.vepo.jcode.controls.FixedSplitPane;
 import io.vepo.jcode.events.FileLoadEvent;
 import io.vepo.jcode.events.TaskStartedEvent;
-import io.vepo.jcode.workspace.WorkspaceRoot;
 import io.vepo.jcode.workspace.WorkspaceView;
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.SplitPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 // https://edencoding.com/how-to-open-edit-sync-and-save-a-text-file-in-javafx/

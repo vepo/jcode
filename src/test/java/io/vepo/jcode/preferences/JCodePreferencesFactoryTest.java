@@ -4,6 +4,7 @@ import static io.vepo.jcode.preferences.JCodePreferencesFactory.getPreferencesFi
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
 
 import java.util.prefs.BackingStoreException;
 import java.util.prefs.Preferences;
@@ -61,5 +62,22 @@ public class JCodePreferencesFactoryTest {
         Preferences userRoot = factory.userRoot();
         userRoot.node("element");
         assertThrows(IllegalStateException.class, () -> userRoot.put("element", "invalidVale"));
+    }
+
+    @Test
+    @DisplayName("Real example")
+    void realTest() {
+        Preferences pref = preferences().userRoot().node("child");
+        assertThat(pref.get("key", null)).isNull();
+        pref.put("key", "some-value");
+
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode storedContent = assertDoesNotThrow(() -> mapper.readTree(getPreferencesFile()));
+        assertThat(storedContent.get("child")).isNotNull();
+        assertThat(storedContent.get("child").get("key")).isNotNull();
+        assertThat(storedContent.get("child").get("key").asText()).isEqualTo("some-value");
+
+        Preferences nPref = new JCodePreferencesFactory().userRoot().node("child");
+        assertThat(nPref.get("key", null)).isEqualTo("some-value");
     }
 }

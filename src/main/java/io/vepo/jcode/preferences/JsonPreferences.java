@@ -1,10 +1,15 @@
 package io.vepo.jcode.preferences;
 
+import static java.util.Objects.isNull;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Spliterator;
@@ -15,6 +20,7 @@ import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonPreferences extends AbstractPreferences {
@@ -33,11 +39,27 @@ public class JsonPreferences extends AbstractPreferences {
 
         log.finest("Instantiating node " + name);
 
-        root = MAPPER.createObjectNode();
-        if (Objects.nonNull(parent)) {
-            parent.root.set(name, root);
+        if (isNull(parent)) {
+            if (JCodePreferencesFactory.getPreferencesFile().exists()) {
+                try {
+                    root = (ObjectNode) MAPPER.readTree(JCodePreferencesFactory.getPreferencesFile());
+                } catch (IOException e) {
+                    log.warning("Invalid file!");
+                    root = MAPPER.createObjectNode();
+                }
+            } else {
+                root = MAPPER.createObjectNode();
+            }
+        } else {
+            if (parent.root.has(name) && parent.root.get(name).isObject()) {
+                root = (ObjectNode) parent.root.get(name);
+            } else {
+                root = MAPPER.createObjectNode();
+                parent.root.set(name, root);
+            }
         }
-        children = new TreeMap<String, JsonPreferences>();
+
+        children = new HashMap<>();
 
         try {
             sync();
@@ -85,7 +107,10 @@ public class JsonPreferences extends AbstractPreferences {
     }
 
     protected String[] childrenNamesSpi() throws BackingStoreException {
-        return children.keySet().toArray(new String[children.keySet().size()]);
+        return stream(spliteratorUnknownSize(root.fieldNames(), Spliterator.ORDERED), false)
+                                                                                            .filter(field -> root.get(field)
+                                                                                                                 .isObject())
+                                                                                            .toArray(String[]::new);
     }
 
     protected JsonPreferences childSpi(String name) {
@@ -97,6 +122,17 @@ public class JsonPreferences extends AbstractPreferences {
         return child;
     }
 
+    public List<String> getList(String name) {
+        if (root.has(name) && root.get(name).isArray()) {
+            ArrayNode arrayNode = (ArrayNode) root.get(name);
+            List<String> values = new ArrayList<>(arrayNode.size());
+            arrayNode.forEach(node -> values.add(node.asText()));
+            return values;
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
     protected void syncSpi() throws BackingStoreException {
         if (isRemoved()) {
             return;
@@ -104,17 +140,21 @@ public class JsonPreferences extends AbstractPreferences {
 
         final File file = JCodePreferencesFactory.getPreferencesFile();
 
-        System.out.println("File: " + file.getAbsolutePath() + " exists? " + file.exists());
+        log.info("File: " + file.getAbsolutePath() + " exists? " + file.exists());
         if (!file.exists()) {
             return;
         }
 
-        synchronized (file) {
-            try {
-                root = getJsonNode((ObjectNode) MAPPER.readTree(file), this);
-            } catch (IOException e) {
-                throw new BackingStoreException(e);
+        if (isNull(parent())) {
+            synchronized (file) {
+                try {
+                    root = (ObjectNode) MAPPER.readTree(file);
+                } catch (IOException e) {
+                    throw new BackingStoreException(e);
+                }
             }
+        } else {
+            root = getJsonNode(root, this);
         }
     }
 
@@ -134,10 +174,10 @@ public class JsonPreferences extends AbstractPreferences {
     }
 
     private ObjectNode getJsonNode(ObjectNode node, JsonPreferences element) {
-        if (element == null) {
+        if (isNull(element.parent())) {
             return node;
         } else {
-            ObjectNode parentNode = getJsonNode(node, (JsonPreferences) element.parent());
+            ObjectNode parentNode = ((JsonPreferences) element.parent()).root;
             if (parentNode.has(name())) {
                 return (ObjectNode) parentNode.get(name());
             } else {
