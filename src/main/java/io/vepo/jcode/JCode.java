@@ -3,15 +3,13 @@ package io.vepo.jcode;
 import static java.util.logging.Level.SEVERE;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Files;
-import java.nio.file.attribute.FileTime;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-import io.vepo.jcode.controls.FixedSplitPane;
+import io.vepo.jcode.controls.FixedSplitPaneBuilder;
 import io.vepo.jcode.events.FileLoadEvent;
 import io.vepo.jcode.events.TaskStartedEvent;
 import io.vepo.jcode.workspace.WorkspaceView;
@@ -29,8 +27,6 @@ public class JCode extends Application {
 
     private ProgressBar progressBar;
     private Label statusMessage;
-    private File loadedFileReference;
-    private FileTime lastModifiedTime;
     private CodeEditor codeEditor;
 
     private Workbench workbench;
@@ -43,12 +39,12 @@ public class JCode extends Application {
     @Override
     public void start(Stage primaryStage) {
         BorderPane pane = new BorderPane();
-        pane.setTop(new JCodeMenu(workbench));
+        pane.setTop(JCodeMenuBuilder.build(workbench));
         Scene scene = new Scene(pane, 300, 250);
 
         codeEditor = new CodeEditor();
         workspace = new WorkspaceView(workbench);
-        pane.setCenter(new FixedSplitPane(workspace, codeEditor));
+        pane.setCenter(FixedSplitPaneBuilder.build(workspace, codeEditor));
 
         HBox rule = new HBox();
         progressBar = new ProgressBar();
@@ -95,7 +91,6 @@ public class JCode extends Application {
             try {
                 codeEditor.setTextContent(loadFileTask.get());
                 statusMessage.setText("File loaded: " + event.file().getName());
-                loadedFileReference = event.file();
             } catch (InterruptedException | ExecutionException e) {
                 Logger.getLogger(getClass().getName()).log(SEVERE, null, e);
                 codeEditor.setTextContent("Could not load file from:\n " + event.file().getAbsolutePath());

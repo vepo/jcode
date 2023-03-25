@@ -18,13 +18,13 @@ public class Workbench {
     }
 
     public <T extends Event> void subscribe(Class<T> eventClass, Consumer<T> callback) {
-        eventSubscribers.computeIfAbsent(eventClass, __ -> new ArrayList<>(1))
+        eventSubscribers.computeIfAbsent(eventClass, cls -> new ArrayList<>(1))
                         .add(callback);
     }
 
     @SuppressWarnings("unchecked")
     public <T extends Event> void emit(T event) {
-        eventSubscribers.computeIfAbsent(event.getClass(), __ -> new ArrayList<>(1))
+        eventSubscribers.computeIfAbsent(event.getClass(), cls -> new ArrayList<>(1))
                         .forEach(callback -> ((Consumer<T>) callback).accept(event));
     }
 

@@ -1,5 +1,6 @@
 package io.vepo.jcode.preferences;
 
+import static io.vepo.jcode.preferences.JCodePreferencesFactory.getPreferencesFile;
 import static java.util.Objects.isNull;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
@@ -13,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Spliterator;
-import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.AbstractPreferences;
@@ -25,7 +25,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonPreferences extends AbstractPreferences {
     private static final Logger log = Logger.getLogger(JsonPreferences.class.getName());
-    private static ObjectMapper MAPPER = new ObjectMapper();
+    private static ObjectMapper mapper = new ObjectMapper();
 
     private ObjectNode root;
     private Map<String, JsonPreferences> children;
@@ -37,24 +37,22 @@ public class JsonPreferences extends AbstractPreferences {
     public JsonPreferences(JsonPreferences parent, String name) {
         super(parent, name);
 
-        log.finest("Instantiating node " + name);
-
         if (isNull(parent)) {
-            if (JCodePreferencesFactory.getPreferencesFile().exists()) {
+            if (getPreferencesFile().exists()) {
                 try {
-                    root = (ObjectNode) MAPPER.readTree(JCodePreferencesFactory.getPreferencesFile());
+                    root = (ObjectNode) mapper.readTree(getPreferencesFile());
                 } catch (IOException e) {
                     log.warning("Invalid file!");
-                    root = MAPPER.createObjectNode();
+                    root = mapper.createObjectNode();
                 }
             } else {
-                root = MAPPER.createObjectNode();
+                root = mapper.createObjectNode();
             }
         } else {
             if (parent.root.has(name) && parent.root.get(name).isObject()) {
                 root = (ObjectNode) parent.root.get(name);
             } else {
-                root = MAPPER.createObjectNode();
+                root = mapper.createObjectNode();
                 parent.root.set(name, root);
             }
         }
@@ -64,7 +62,7 @@ public class JsonPreferences extends AbstractPreferences {
         try {
             sync();
         } catch (BackingStoreException e) {
-            log.log(Level.SEVERE, "Unable to sync on creation of node " + name, e);
+            log.log(Level.SEVERE, String.format("Unable to sync on creation of node %s", name), e);
         }
     }
 
@@ -76,7 +74,7 @@ public class JsonPreferences extends AbstractPreferences {
         try {
             flush();
         } catch (BackingStoreException e) {
-            log.log(Level.SEVERE, "Unable to flush after putting " + key, e);
+            log.log(Level.SEVERE, String.format("Unable to flush after putting %s", key), e);
         }
     }
 
@@ -89,7 +87,7 @@ public class JsonPreferences extends AbstractPreferences {
         try {
             flush();
         } catch (BackingStoreException e) {
-            log.log(Level.SEVERE, "Unable to flush after removing " + key, e);
+            log.log(Level.SEVERE, String.format("Unable to flush after removing %s", key), e);
         }
     }
 
@@ -138,9 +136,8 @@ public class JsonPreferences extends AbstractPreferences {
             return;
         }
 
-        final File file = JCodePreferencesFactory.getPreferencesFile();
+        final File file = getPreferencesFile();
 
-        log.info("File: " + file.getAbsolutePath() + " exists? " + file.exists());
         if (!file.exists()) {
             return;
         }
@@ -148,7 +145,7 @@ public class JsonPreferences extends AbstractPreferences {
         if (isNull(parent())) {
             synchronized (file) {
                 try {
-                    root = (ObjectNode) MAPPER.readTree(file);
+                    root = (ObjectNode) mapper.readTree(file);
                 } catch (IOException e) {
                     throw new BackingStoreException(e);
                 }
@@ -160,10 +157,10 @@ public class JsonPreferences extends AbstractPreferences {
 
     protected void flushSpi() throws BackingStoreException {
         if (this.parent() == null) {
-            final File file = JCodePreferencesFactory.getPreferencesFile();
+            final File file = getPreferencesFile();
             synchronized (file) {
                 try {
-                    MAPPER.writeValue(file, root);
+                    mapper.writeValue(file, root);
                 } catch (IOException e) {
                     throw new BackingStoreException(e);
                 }
@@ -181,7 +178,7 @@ public class JsonPreferences extends AbstractPreferences {
             if (parentNode.has(name())) {
                 return (ObjectNode) parentNode.get(name());
             } else {
-                return parentNode.set(name(), MAPPER.createObjectNode());
+                return parentNode.set(name(), mapper.createObjectNode());
             }
         }
     }

@@ -6,8 +6,8 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 
-public class JCodeMenu extends MenuBar {
-    private static Menu createFileMenu(Workbench workbench) {
+public interface JCodeMenuBuilder {
+    public static MenuBar build(Workbench workbench) {
         Menu fileMenu = new Menu("File");
         MenuItem openItem = new MenuItem();
         openItem.setText("Open Workspace");
@@ -18,11 +18,7 @@ public class JCodeMenu extends MenuBar {
         closeItem.setText("Close Workspace");
         closeItem.setOnAction(evnt -> workbench.emit(new CloseWorkspaceEvent()));
         fileMenu.getItems().addAll(closeItem);
-        return fileMenu;
-    }
-
-    public JCodeMenu(Workbench workbench) {
-        super(createFileMenu(workbench));
+        return new MenuBar(fileMenu);
     }
 
 }
