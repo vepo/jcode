@@ -1,5 +1,7 @@
 package io.vepo.jcode;
 
+import static javafx.application.Platform.runLater;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +27,7 @@ public class Workbench {
     @SuppressWarnings("unchecked")
     public <T extends Event> void emit(T event) {
         eventSubscribers.computeIfAbsent(event.getClass(), cls -> new ArrayList<>(1))
-                        .forEach(callback -> ((Consumer<T>) callback).accept(event));
+                        .forEach(callback -> runLater(() -> ((Consumer<T>) callback).accept(event)));
     }
 
     public FileFilter fileFilter() {

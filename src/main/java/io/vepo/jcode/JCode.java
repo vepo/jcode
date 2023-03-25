@@ -1,18 +1,15 @@
 package io.vepo.jcode;
 
-import static java.util.logging.Level.SEVERE;
-
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.util.concurrent.ExecutionException;
-import java.util.logging.Logger;
 import java.util.stream.Stream;
 
 import io.vepo.jcode.controls.FixedSplitPaneBuilder;
 import io.vepo.jcode.events.FileLoadEvent;
 import io.vepo.jcode.events.TaskStartedEvent;
-import io.vepo.jcode.workspace.WorkspaceView;
+import io.vepo.jcode.workspace.WorkspaceViewBuilder;
 import javafx.application.Application;
 import javafx.concurrent.Task;
 import javafx.scene.Scene;
@@ -20,6 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 // https://edencoding.com/how-to-open-edit-sync-and-save-a-text-file-in-javafx/
@@ -29,8 +27,8 @@ public class JCode extends Application {
     private Label statusMessage;
     private CodeEditor codeEditor;
 
-    private Workbench workbench;
-    private WorkspaceView workspace;
+    Workbench workbench;
+    private StackPane workspace;
 
     public JCode() {
         workbench = new Workbench();
@@ -43,7 +41,7 @@ public class JCode extends Application {
         Scene scene = new Scene(pane, 300, 250);
 
         codeEditor = new CodeEditor();
-        workspace = new WorkspaceView(workbench);
+        workspace = WorkspaceViewBuilder.build(workbench);
         pane.setCenter(FixedSplitPaneBuilder.build(workspace, codeEditor));
 
         HBox rule = new HBox();
@@ -91,15 +89,17 @@ public class JCode extends Application {
             try {
                 codeEditor.setTextContent(loadFileTask.get());
                 statusMessage.setText("File loaded: " + event.file().getName());
-            } catch (InterruptedException | ExecutionException e) {
-                Logger.getLogger(getClass().getName()).log(SEVERE, null, e);
-                codeEditor.setTextContent("Could not load file from:\n " + event.file().getAbsolutePath());
+            } catch (ExecutionException e) {
+                codeEditor.setTextContent(String.format("Could not load file from: %s ",
+                                                        event.file().getAbsolutePath()));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             }
         });
         // If unsuccessful, set text area with error message and status message to
         // failed
         loadFileTask.setOnFailed(workerStateEvent -> {
-            codeEditor.setTextContent("Could not load file from:\n " + event.file().getAbsolutePath());
+            codeEditor.setTextContent(String.format("Could not load file from: %s", event.file().getAbsolutePath()));
             statusMessage.setText("Failed to load file");
         });
         workbench.emit(new TaskStartedEvent(loadFileTask.progressProperty()));
