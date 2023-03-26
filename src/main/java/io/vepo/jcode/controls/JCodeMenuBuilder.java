@@ -9,13 +9,13 @@ import javafx.scene.control.MenuItem;
 
 public interface JCodeMenuBuilder {
     public static MenuBar build(Workbench workbench) {
-        Menu fileMenu = new Menu("File");
-        MenuItem openItem = new MenuItem();
+        var fileMenu = new Menu("File");
+        var openItem = new MenuItem();
         openItem.setText("Open Workspace");
         openItem.setOnAction(evnt -> workbench.emit(new SelectWorkspaceEvent()));
         fileMenu.getItems().addAll(openItem);
 
-        MenuItem closeItem = new MenuItem();
+        var closeItem = new MenuItem();
         closeItem.setText("Close Workspace");
         closeItem.setOnAction(evnt -> workbench.emit(new CloseWorkspaceEvent()));
         fileMenu.getItems().addAll(closeItem);

@@ -1,6 +1,7 @@
 package io.vepo.jcode.workspace;
 
 import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
+import static io.vepo.jcode.utils.FileId.idFromFile;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static javafx.scene.layout.StackPane.setAlignment;
@@ -24,6 +25,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.stage.DirectoryChooser;
 
 public interface WorkspaceViewBuilder {
@@ -40,7 +42,7 @@ public interface WorkspaceViewBuilder {
             @Override
             public void updateItem(File item, boolean empty) {
                 if (nonNull(item)) {
-                    setId(item.getAbsolutePath().replaceAll("[^A-Za-z0-9]", "-"));
+                    setId(idFromFile(item));
                 }
                 super.updateItem(item, empty);
                 if (empty || isNull(item)) {
@@ -48,7 +50,7 @@ public interface WorkspaceViewBuilder {
                     setGraphic(null);
                 } else {
                     setText(item.getName());
-                    setGraphic(FontIcon.of(item.isDirectory() ? Themify.FOLDER : Themify.FILE));
+                    setGraphic(FontIcon.of(item.isDirectory() ? Themify.FOLDER : Themify.FILE, Color.WHITE));
                 }
             }
 

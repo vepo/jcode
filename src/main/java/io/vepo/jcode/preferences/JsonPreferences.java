@@ -2,29 +2,29 @@ package io.vepo.jcode.preferences;
 
 import static io.vepo.jcode.preferences.JCodePreferencesFactory.getPreferencesFile;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 import static java.util.Spliterators.spliteratorUnknownSize;
 import static java.util.stream.StreamSupport.stream;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Spliterator;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.prefs.AbstractPreferences;
 import java.util.prefs.BackingStoreException;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class JsonPreferences extends AbstractPreferences {
-    private static final Logger log = Logger.getLogger(JsonPreferences.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(JsonPreferences.class);
     private static ObjectMapper mapper = new ObjectMapper();
 
     private ObjectNode root;
@@ -42,7 +42,7 @@ public class JsonPreferences extends AbstractPreferences {
                 try {
                     root = (ObjectNode) mapper.readTree(getPreferencesFile());
                 } catch (IOException e) {
-                    log.warning("Invalid file!");
+                    logger.warn("Invalid file!");
                     root = mapper.createObjectNode();
                 }
             } else {
@@ -62,7 +62,7 @@ public class JsonPreferences extends AbstractPreferences {
         try {
             sync();
         } catch (BackingStoreException e) {
-            log.log(Level.SEVERE, String.format("Unable to sync on creation of node %s", name), e);
+            logger.error(String.format("Unable to sync on creation of node %s", name), e);
         }
     }
 
@@ -74,7 +74,7 @@ public class JsonPreferences extends AbstractPreferences {
         try {
             flush();
         } catch (BackingStoreException e) {
-            log.log(Level.SEVERE, String.format("Unable to flush after putting %s", key), e);
+            logger.error(String.format("Unable to flush after putting %s", key), e);
         }
     }
 
@@ -87,13 +87,13 @@ public class JsonPreferences extends AbstractPreferences {
         try {
             flush();
         } catch (BackingStoreException e) {
-            log.log(Level.SEVERE, String.format("Unable to flush after removing %s", key), e);
+            logger.error(String.format("Unable to flush after removing %s", key), e);
         }
     }
 
     protected void removeNodeSpi() throws BackingStoreException {
-        JsonPreferences parent = (JsonPreferences) parent();
-        if (Objects.nonNull(parent)) {
+        var parent = (JsonPreferences) parent();
+        if (nonNull(parent)) {
             parent.root.remove(name());
         }
         flush();
@@ -112,7 +112,7 @@ public class JsonPreferences extends AbstractPreferences {
     }
 
     protected JsonPreferences childSpi(String name) {
-        JsonPreferences child = children.get(name);
+        var child = children.get(name);
         if (child == null || child.isRemoved()) {
             child = new JsonPreferences(this, name);
             children.put(name, child);
@@ -122,8 +122,8 @@ public class JsonPreferences extends AbstractPreferences {
 
     public List<String> getList(String name) {
         if (root.has(name) && root.get(name).isArray()) {
-            ArrayNode arrayNode = (ArrayNode) root.get(name);
-            List<String> values = new ArrayList<>(arrayNode.size());
+            var arrayNode = (ArrayNode) root.get(name);
+            var values = new ArrayList<String>(arrayNode.size());
             arrayNode.forEach(node -> values.add(node.asText()));
             return values;
         } else {
@@ -136,7 +136,7 @@ public class JsonPreferences extends AbstractPreferences {
             return;
         }
 
-        final File file = getPreferencesFile();
+        var file = getPreferencesFile();
 
         if (!file.exists()) {
             return;
@@ -157,7 +157,7 @@ public class JsonPreferences extends AbstractPreferences {
 
     protected void flushSpi() throws BackingStoreException {
         if (this.parent() == null) {
-            final File file = getPreferencesFile();
+            var file = getPreferencesFile();
             synchronized (file) {
                 try {
                     mapper.writeValue(file, root);
@@ -174,7 +174,7 @@ public class JsonPreferences extends AbstractPreferences {
         if (isNull(element.parent())) {
             return node;
         } else {
-            ObjectNode parentNode = ((JsonPreferences) element.parent()).root;
+            var parentNode = ((JsonPreferences) element.parent()).root;
             if (parentNode.has(name())) {
                 return (ObjectNode) parentNode.get(name());
             } else {

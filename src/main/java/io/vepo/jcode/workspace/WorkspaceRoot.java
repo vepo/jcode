@@ -8,6 +8,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.kordamp.ikonli.themify.Themify;
 
 import javafx.scene.control.TreeItem;
+import javafx.scene.paint.Color;
 import javafx.util.StringConverter;
 
 public class WorkspaceRoot extends TreeItem<File> {
@@ -42,9 +43,9 @@ public class WorkspaceRoot extends TreeItem<File> {
 
     private static void fillTree(File file, TreeItem<File> item, FileFilter fileFilter) {
         if (nonNull(file) && file.isDirectory()) {
-            for (File child : file.listFiles()) {
+            for (var child : file.listFiles()) {
                 if (!fileFilter.ignore(child)) {
-                    TreeItem<File> childItem = new TreeItem<File>(child);
+                    var childItem = new TreeItem<File>(child);
                     item.getChildren().add(childItem);
                     fillTree(child, childItem, fileFilter);
                 }
@@ -53,7 +54,7 @@ public class WorkspaceRoot extends TreeItem<File> {
     }
 
     public WorkspaceRoot(File root, FileFilter fileFilter) {
-        super(root, FontIcon.of(Themify.FOLDER));
+        super(root, FontIcon.of(Themify.FOLDER, Color.WHITE));
         fillTree(root, this, fileFilter);
     }
 

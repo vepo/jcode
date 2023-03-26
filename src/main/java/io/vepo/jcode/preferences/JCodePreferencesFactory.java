@@ -1,26 +1,28 @@
 package io.vepo.jcode.preferences;
 
+import static java.util.Objects.isNull;
+
 import java.io.File;
-import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.logging.Logger;
 import java.util.prefs.PreferencesFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class JCodePreferencesFactory implements PreferencesFactory {
-    private static final Logger logger = Logger.getLogger(JCodePreferencesFactory.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(JCodePreferencesFactory.class);
     private static File preferencesFile;
 
     public static File getPreferencesFile() {
         if (preferencesFile == null) {
-            Path prefsFile = Paths.get(System.getProperty("user.home"), ".jcode", "settings.json");
+            var prefsFile = Paths.get(System.getProperty("user.home"), ".jcode", "settings.json");
             if (!prefsFile.toFile().exists()) {
                 prefsFile.toFile().getParentFile().mkdirs();
             }
 
             preferencesFile = prefsFile.toFile();
-            logger.finer("Preferences file is " + preferencesFile);
+            logger.info("Preferences file is {}", preferencesFile);
         }
         return preferencesFile;
     }
@@ -33,7 +35,7 @@ public class JCodePreferencesFactory implements PreferencesFactory {
 
     public JsonPreferences userRoot() {
         if (rootPreferences == null) {
-            logger.finer("Instantiating root preferences");
+            logger.info("Instantiating root preferences");
 
             rootPreferences = new JsonPreferences();
         }
@@ -44,7 +46,7 @@ public class JCodePreferencesFactory implements PreferencesFactory {
 
     public static JCodePreferencesFactory preferences() {
         return INSTANCE.updateAndGet(value -> {
-            if (Objects.isNull(value)) {
+            if (isNull(value)) {
                 value = new JCodePreferencesFactory();
             }
             return value;

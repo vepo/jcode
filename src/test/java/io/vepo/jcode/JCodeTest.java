@@ -1,6 +1,7 @@
 package io.vepo.jcode;
 
 import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
+import static io.vepo.jcode.utils.FileId.idFromFile;
 import static io.vepo.jcode.workspace.WorkspaceViewBuilder.FILE_DIALOG_KEY;
 import static io.vepo.jcode.workspace.WorkspaceViewBuilder.OPEN_WORKSPACE_PREFERECE_KEY;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,10 +48,11 @@ class JCodeTest {
         await().until(() -> robot.lookup("#" + WorkspaceViewBuilder.ID).queryAll().size() == 1);
         File file = find(Paths.get(".").toFile(), ".*\\.java");
         code.workbench.emit(new FileLoadEvent(file));
-        CodeArea editor = robot.lookup("#codeArea")
+        CodeArea editor = robot.lookup("#codeArea-" + idFromFile(file))
                                .queryAs(CodeArea.class);
         await().until(() -> !editor.getContent().getText().isEmpty());
-        assertThat(editor.getContent().getText()).isEqualToIgnoringNewLines(new String(Files.readAllBytes(file.toPath())));
+        assertThat(editor.getContent()
+                         .getText()).isEqualToIgnoringNewLines(new String(Files.readAllBytes(file.toPath())));
         code.workbench.emit(new CloseWorkspaceEvent());
         await().until(() -> robot.lookup("#" + WorkspaceViewBuilder.ID).queryAll().size() == 0);
     }

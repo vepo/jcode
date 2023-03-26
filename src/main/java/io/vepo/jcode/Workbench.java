@@ -1,5 +1,6 @@
 package io.vepo.jcode;
 
+import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
 import static javafx.application.Platform.runLater;
 
 import java.util.ArrayList;
@@ -8,7 +9,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import io.vepo.jcode.events.Event;
-import io.vepo.jcode.preferences.JCodePreferencesFactory;
 import io.vepo.jcode.workspace.FileFilter;
 
 public class Workbench {
@@ -31,7 +31,7 @@ public class Workbench {
     }
 
     public FileFilter fileFilter() {
-        return new FileFilter(JCodePreferencesFactory.preferences().userRoot().getList("workspaceFilder"));
+        return new FileFilter(preferences().userRoot().getList("workspaceFilder"));
     }
 
 }
