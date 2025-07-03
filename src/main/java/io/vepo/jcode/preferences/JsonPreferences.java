@@ -131,6 +131,17 @@ public class JsonPreferences extends AbstractPreferences {
         }
     }
 
+    public void putList(String name, List<String> values) {
+        var arrayNode = mapper.createArrayNode();
+        values.forEach(arrayNode::add);
+        root.set(name, arrayNode);
+        try {
+            flush();
+        } catch (BackingStoreException e) {
+            logger.error(String.format("Unable to flush after putting list %s", name), e);
+        }
+    }
+
     protected void syncSpi() throws BackingStoreException {
         if (isRemoved()) {
             return;

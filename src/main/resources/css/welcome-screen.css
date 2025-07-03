@@ -1,0 +1,39 @@
+.welcome-list {
+    -fx-background-color: #3c3c3c;
+    -fx-border-color: #555555;
+    -fx-border-radius: 3px;
+    -fx-background-radius: 3px;
+}
+
+.welcome-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 8px 12px;
+}
+
+.welcome-list .list-cell:selected {
+    -fx-background-color: #007acc;
+    -fx-text-fill: white;
+}
+
+.welcome-list .list-cell:hover {
+    -fx-background-color: #4c4c4c;
+}
+
+.welcome-list .list-cell:empty {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.welcome-list .scroll-bar {
+    -fx-background-color: #3c3c3c;
+}
+
+.welcome-list .scroll-bar .thumb {
+    -fx-background-color: #555555;
+    -fx-background-radius: 3px;
+}
+
+.welcome-list .scroll-bar .thumb:hover {
+    -fx-background-color: #666666;
+} 

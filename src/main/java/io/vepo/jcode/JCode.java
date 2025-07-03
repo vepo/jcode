@@ -3,8 +3,10 @@ package io.vepo.jcode;
 import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
 import java.util.stream.Stream;
@@ -15,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import io.vepo.jcode.controls.CodeEditor;
 import io.vepo.jcode.controls.FixedSplitPaneBuilder;
 import io.vepo.jcode.controls.JCodeMenuBuilder;
+import io.vepo.jcode.controls.WelcomeScreen;
 import io.vepo.jcode.events.CloseWorkspaceEvent;
 import io.vepo.jcode.events.FileLoadEvent;
 import io.vepo.jcode.events.LoadedFileEvent;
@@ -46,6 +49,7 @@ public class JCode extends Application {
     Workbench workbench;
     private StackPane workspace;
     private CodeEditor codeEditor;
+    private WelcomeScreen welcomeScreen;
 
     public JCode() {
         workbench = new Workbench();
@@ -104,11 +108,17 @@ public class JCode extends Application {
 
         JMetro jMetro = new JMetro(Style.DARK);
         jMetro.setScene(scene);
+        
+        // Load custom CSS
+        scene.getStylesheets().add(getClass().getResource("/css/welcome-screen.css").toExternalForm());
 
         codeEditor = new CodeEditor(workbench);
+        welcomeScreen = new WelcomeScreen(workbench, primaryStage);
 
         workspace = WorkspaceViewBuilder.build(workbench);
-        pane.setCenter(FixedSplitPaneBuilder.build(workspace, codeEditor));
+        
+        // Start with welcome screen
+        pane.setCenter(welcomeScreen);
 
         HBox rule = new HBox();
         progressBar = new ProgressBar();
@@ -131,6 +141,9 @@ public class JCode extends Application {
         workbench.subscribe(FileLoadEvent.class, this::loadFile);
         workbench.subscribe(WorkspaceOpenEvent.class, this::onWorkspaceOpen);
         workbench.subscribe(CloseWorkspaceEvent.class, this::onWorkspaceClose);
+        
+        // Try to restore last workspace
+        restoreLastWorkspace();
     }
 
     private void updateWindowTitle(String workspacePath) {
@@ -144,10 +157,18 @@ public class JCode extends Application {
     private void onWorkspaceOpen(WorkspaceOpenEvent event) {
         updateWindowTitle(event.workspace().getAbsolutePath());
         codeEditor.restoreOpenTabs();
+        
+        // Switch to workspace view
+        BorderPane pane = (BorderPane) primaryStage.getScene().getRoot();
+        pane.setCenter(FixedSplitPaneBuilder.build(workspace, codeEditor));
     }
 
     private void onWorkspaceClose(CloseWorkspaceEvent event) {
         updateWindowTitle(null);
+        
+        // Switch back to welcome screen
+        BorderPane pane = (BorderPane) primaryStage.getScene().getRoot();
+        pane.setCenter(welcomeScreen);
     }
 
     private void loadFile(FileLoadEvent event) {
@@ -193,6 +214,22 @@ public class JCode extends Application {
 
     private void progressReporter(TaskStartedEvent event) {
         progressBar.progressProperty().bind(event.progress());
+    }
+    
+    private void restoreLastWorkspace() {
+        var prefs = (io.vepo.jcode.preferences.JsonPreferences) preferences().userRoot().node("recentWorkspaces");
+        List<String> recent = prefs.getList("workspaces");
+        
+        if (recent != null && !recent.isEmpty()) {
+            String lastWorkspace = recent.get(0);
+            File workspaceDir = new File(lastWorkspace);
+            if (workspaceDir.exists() && workspaceDir.isDirectory()) {
+                // Use Platform.runLater to ensure UI is ready
+                javafx.application.Platform.runLater(() -> {
+                    workbench.emit(new WorkspaceOpenEvent(workspaceDir));
+                });
+            }
+        }
     }
 
     public static void main(String[] args) {
