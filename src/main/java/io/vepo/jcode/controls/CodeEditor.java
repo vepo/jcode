@@ -67,6 +67,9 @@ public class CodeEditor extends TabPane {
             // Move caret to the first line
             codeArea.moveTo(0);
             
+            // Scroll to the top to show the first line
+            codeArea.showParagraphAtTop(0);
+            
             pane.getContent().setWrapText(true);
             pane.getContent().setId("codeArea-" + idFromFile(event.file()));
             pane.getContent().setPadding(new Insets(5.0, 5.0, 5.0, 5.0));
