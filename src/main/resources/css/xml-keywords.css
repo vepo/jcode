@@ -1,0 +1,55 @@
+.xml-code {
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 14px;
+    -fx-background-color: #2b2b2b;
+    -fx-text-fill: #a9b7c6;
+}
+
+.xml-code .text {
+    -fx-fill: #a9b7c6;
+}
+
+.xml-code .tag {
+    -fx-fill: #e8bf6a;
+    -fx-font-weight: bold;
+}
+
+.xml-code .attribute {
+    -fx-fill: #9876aa;
+}
+
+.xml-code .string {
+    -fx-fill: #6a8759;
+}
+
+.xml-code .comment {
+    -fx-fill: #808080;
+    -fx-font-style: italic;
+}
+
+.xml-code .cdata {
+    -fx-fill: #cc7832;
+}
+
+/* Line numbers */
+.xml-code .paragraph-box:has-caret {
+    -fx-background-color: #323232;
+}
+
+.xml-code .lineno {
+    -fx-background-color: #313335;
+    -fx-text-fill: #606366;
+    -fx-padding: 0 5 0 5;
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 12px;
+}
+
+/* Selection */
+.xml-code .selection {
+    -fx-fill: #214283;
+}
+
+/* Caret */
+.xml-code .caret {
+    -fx-stroke: #a9b7c6;
+} 

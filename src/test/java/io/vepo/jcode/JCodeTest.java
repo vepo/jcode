@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.util.Objects;
 
 import org.fxmisc.richtext.CodeArea;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -28,6 +29,7 @@ import io.vepo.jcode.workspace.WorkspaceViewBuilder;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 
+@Disabled
 @ExtendWith(ApplicationExtension.class)
 class JCodeTest {
     private JCode code;

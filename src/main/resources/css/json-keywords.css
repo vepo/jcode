@@ -1,0 +1,63 @@
+.json-code {
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 14px;
+    -fx-background-color: #2b2b2b;
+    -fx-text-fill: #a9b7c6;
+}
+
+.json-code .text {
+    -fx-fill: #a9b7c6;
+}
+
+.json-code .key {
+    -fx-fill: #9876aa;
+    -fx-font-weight: bold;
+}
+
+.json-code .string {
+    -fx-fill: #6a8759;
+}
+
+.json-code .number {
+    -fx-fill: #6897bb;
+}
+
+.json-code .boolean {
+    -fx-fill: #cc7832;
+    -fx-font-weight: bold;
+}
+
+.json-code .brace {
+    -fx-fill: #a9b7c6;
+}
+
+.json-code .bracket {
+    -fx-fill: #a9b7c6;
+}
+
+.json-code .comma {
+    -fx-fill: #a9b7c6;
+}
+
+/* Line numbers */
+.json-code .paragraph-box:has-caret {
+    -fx-background-color: #323232;
+}
+
+.json-code .lineno {
+    -fx-background-color: #313335;
+    -fx-text-fill: #606366;
+    -fx-padding: 0 5 0 5;
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 12px;
+}
+
+/* Selection */
+.json-code .selection {
+    -fx-fill: #214283;
+}
+
+/* Caret */
+.json-code .caret {
+    -fx-stroke: #a9b7c6;
+} 

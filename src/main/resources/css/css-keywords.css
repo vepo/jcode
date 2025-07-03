@@ -1,0 +1,75 @@
+.css-code {
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 14px;
+    -fx-background-color: #2b2b2b;
+    -fx-text-fill: #a9b7c6;
+}
+
+.css-code .text {
+    -fx-fill: #a9b7c6;
+}
+
+.css-code .selector {
+    -fx-fill: #e8bf6a;
+    -fx-font-weight: bold;
+}
+
+.css-code .property {
+    -fx-fill: #9876aa;
+}
+
+.css-code .value {
+    -fx-fill: #cc7832;
+}
+
+.css-code .string {
+    -fx-fill: #6a8759;
+}
+
+.css-code .comment {
+    -fx-fill: #808080;
+    -fx-font-style: italic;
+}
+
+.css-code .number {
+    -fx-fill: #6897bb;
+}
+
+.css-code .color {
+    -fx-fill: #ff6b6b;
+}
+
+.css-code .brace {
+    -fx-fill: #a9b7c6;
+}
+
+.css-code .semicolon {
+    -fx-fill: #a9b7c6;
+}
+
+.css-code .colon {
+    -fx-fill: #a9b7c6;
+}
+
+/* Line numbers */
+.css-code .paragraph-box:has-caret {
+    -fx-background-color: #323232;
+}
+
+.css-code .lineno {
+    -fx-background-color: #313335;
+    -fx-text-fill: #606366;
+    -fx-padding: 0 5 0 5;
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 12px;
+}
+
+/* Selection */
+.css-code .selection {
+    -fx-fill: #214283;
+}
+
+/* Caret */
+.css-code .caret {
+    -fx-stroke: #a9b7c6;
+} 

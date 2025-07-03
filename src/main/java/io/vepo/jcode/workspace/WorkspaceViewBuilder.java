@@ -23,6 +23,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.TreeCell;
+import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
@@ -36,6 +37,8 @@ public interface WorkspaceViewBuilder {
     public static final String ID = "workspace-tree";
     static final String FILE_DIALOG_KEY = "file-dialog";
     static final String OPEN_WORKSPACE_PREFERECE_KEY = "open-workspace";
+    static final String LAST_WORKSPACE_KEY = "last-workspace";
+    static final String EXPANDED_NODES_KEY = "expanded-nodes";
 
     private static TreeCell<File> cellCreator(TreeView<File> view) {
         return new TreeCell<File>() {
@@ -71,12 +74,43 @@ public interface WorkspaceViewBuilder {
         workbench.subscribe(WorkspaceOpenEvent.class, event -> openWorkspace(pane, btnOpenWorkspace, workbench, event));
         workbench.subscribe(SelectWorkspaceEvent.class, event -> selectWorkspace(pane, workbench, event));
         workbench.subscribe(CloseWorkspaceEvent.class, evnt -> closeWorkspace(pane, btnOpenWorkspace, evnt));
+        
+        // Try to open the last workspace on startup
+        openLastWorkspace(pane, btnOpenWorkspace, workbench);
+        
         return pane;
+    }
+
+    private static void openLastWorkspace(StackPane pane, Button btnOpenWorkspace, Workbench workbench) {
+        Preferences workspacePreferences = preferences().userRoot().node(OPEN_WORKSPACE_PREFERECE_KEY);
+        String lastWorkspacePath = workspacePreferences.get(LAST_WORKSPACE_KEY, null);
+        
+        if (nonNull(lastWorkspacePath)) {
+            File lastWorkspace = new File(lastWorkspacePath);
+            if (lastWorkspace.exists() && lastWorkspace.isDirectory()) {
+                workbench.emit(new WorkspaceOpenEvent(lastWorkspace));
+            }
+        }
     }
 
     private static void closeWorkspace(StackPane pane, Button btnOpenWorkspace, CloseWorkspaceEvent event) {
         pane.getChildren().removeIf(node -> node instanceof TreeView);
         pane.getChildren().add(btnOpenWorkspace);
+        
+        // Clear the last workspace preference when closing
+        Preferences workspacePreferences = preferences().userRoot().node(OPEN_WORKSPACE_PREFERECE_KEY);
+        workspacePreferences.remove(LAST_WORKSPACE_KEY);
+
+        // Save expanded nodes if any tree is present
+        pane.getChildren().stream()
+            .filter(node -> node instanceof TreeView)
+            .map(node -> (TreeView<File>) node)
+            .findFirst()
+            .ifPresent(treeView -> {
+                var expandedPaths = new StringBuilder();
+                collectExpandedPaths(treeView.getRoot(), "", expandedPaths);
+                workspacePreferences.put(EXPANDED_NODES_KEY, expandedPaths.toString());
+            });
     }
 
     private static void openWorkspace(StackPane pane,
@@ -98,6 +132,17 @@ public interface WorkspaceViewBuilder {
         setMargin(treeView, new Insets(0, 0, 0, 0));
         pane.getChildren().remove(btnOpenWorkspace);
         pane.getChildren().add(treeView);
+        
+        // Store the workspace path for next startup
+        Preferences workspacePreferences = preferences().userRoot().node(OPEN_WORKSPACE_PREFERECE_KEY);
+        workspacePreferences.put(LAST_WORKSPACE_KEY, event.workspace().getAbsolutePath());
+
+        // Restore expanded nodes
+        String expandedNodes = workspacePreferences.get(EXPANDED_NODES_KEY, "");
+        if (!expandedNodes.isEmpty()) {
+            var expandedSet = java.util.Set.of(expandedNodes.split(";"));
+            restoreExpandedState(treeView.getRoot(), "", expandedSet);
+        }
     }
 
     private static void selectWorkspace(StackPane pane, Workbench workbench, SelectWorkspaceEvent event) {
@@ -113,6 +158,35 @@ public interface WorkspaceViewBuilder {
         if (nonNull(selectedDirectory)) {
             fileDialogPreferences.put(FILE_DIALOG_KEY, selectedDirectory.getAbsolutePath());
             workbench.emit(new WorkspaceOpenEvent(selectedDirectory));
+        }
+    }
+
+    private static void collectExpandedPaths(TreeItem<File> node, String path, StringBuilder expandedPaths) {
+        if (node == null) return;
+        String currentPath = path;
+        if (node.getValue() != null) {
+            currentPath = path.isEmpty() ? node.getValue().getAbsolutePath() : path + "/" + node.getValue().getName();
+        }
+        if (node.isExpanded()) {
+            if (expandedPaths.length() > 0) expandedPaths.append(";");
+            expandedPaths.append(currentPath);
+        }
+        for (TreeItem<File> child : node.getChildren()) {
+            collectExpandedPaths(child, currentPath, expandedPaths);
+        }
+    }
+
+    private static void restoreExpandedState(TreeItem<File> node, String path, java.util.Set<String> expandedSet) {
+        if (node == null) return;
+        String currentPath = path;
+        if (node.getValue() != null) {
+            currentPath = path.isEmpty() ? node.getValue().getAbsolutePath() : path + "/" + node.getValue().getName();
+        }
+        if (expandedSet.contains(currentPath)) {
+            node.setExpanded(true);
+        }
+        for (TreeItem<File> child : node.getChildren()) {
+            restoreExpandedState(child, currentPath, expandedSet);
         }
     }
 

@@ -15,9 +15,11 @@ import org.slf4j.LoggerFactory;
 import io.vepo.jcode.controls.CodeEditor;
 import io.vepo.jcode.controls.FixedSplitPaneBuilder;
 import io.vepo.jcode.controls.JCodeMenuBuilder;
+import io.vepo.jcode.events.CloseWorkspaceEvent;
 import io.vepo.jcode.events.FileLoadEvent;
 import io.vepo.jcode.events.LoadedFileEvent;
 import io.vepo.jcode.events.TaskStartedEvent;
+import io.vepo.jcode.events.WorkspaceOpenEvent;
 import io.vepo.jcode.workspace.WorkspaceViewBuilder;
 import javafx.application.Application;
 import javafx.concurrent.Task;
@@ -39,6 +41,7 @@ public class JCode extends Application {
 
     private ProgressBar progressBar;
     private Label statusMessage;
+    private Stage primaryStage;
 
     Workbench workbench;
     private StackPane workspace;
@@ -49,6 +52,7 @@ public class JCode extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        this.primaryStage = primaryStage;
         BorderPane pane = new BorderPane();
         pane.setTop(JCodeMenuBuilder.build(workbench));
 
@@ -112,11 +116,29 @@ public class JCode extends Application {
 
         // Definir a cena no palco
         primaryStage.setScene(scene);
-        primaryStage.setTitle("jCode");
+        updateWindowTitle(null);
         primaryStage.show();
 
         workbench.subscribe(TaskStartedEvent.class, this::progressReporter);
         workbench.subscribe(FileLoadEvent.class, this::loadFile);
+        workbench.subscribe(WorkspaceOpenEvent.class, this::onWorkspaceOpen);
+        workbench.subscribe(CloseWorkspaceEvent.class, this::onWorkspaceClose);
+    }
+
+    private void updateWindowTitle(String workspacePath) {
+        if (workspacePath != null) {
+            primaryStage.setTitle("jCode - " + workspacePath);
+        } else {
+            primaryStage.setTitle("jCode");
+        }
+    }
+
+    private void onWorkspaceOpen(WorkspaceOpenEvent event) {
+        updateWindowTitle(event.workspace().getAbsolutePath());
+    }
+
+    private void onWorkspaceClose(CloseWorkspaceEvent event) {
+        updateWindowTitle(null);
     }
 
     private void loadFile(FileLoadEvent event) {

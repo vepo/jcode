@@ -1,0 +1,80 @@
+.code-area {
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 14px;
+    -fx-background-color: #2b2b2b;
+    -fx-text-fill: #a9b7c6;
+}
+
+.code-area .text {
+    -fx-fill: #a9b7c6;
+}
+
+.code-area .keyword {
+    -fx-fill: #cc7832;
+    -fx-font-weight: bold;
+}
+
+.code-area .string {
+    -fx-fill: #6a8759;
+}
+
+.code-area .char {
+    -fx-fill: #6a8759;
+}
+
+.code-area .comment {
+    -fx-fill: #808080;
+    -fx-font-style: italic;
+}
+
+.code-area .number {
+    -fx-fill: #6897bb;
+}
+
+.code-area .annotation {
+    -fx-fill: #bbb529;
+}
+
+.code-area .type {
+    -fx-fill: #a9b7c6;
+    -fx-font-weight: bold;
+}
+
+.code-area .paren {
+    -fx-fill: #a9b7c6;
+}
+
+.code-area .brace {
+    -fx-fill: #a9b7c6;
+}
+
+.code-area .bracket {
+    -fx-fill: #a9b7c6;
+}
+
+.code-area .semicolon {
+    -fx-fill: #a9b7c6;
+}
+
+/* Line numbers */
+.code-area .paragraph-box:has-caret {
+    -fx-background-color: #323232;
+}
+
+.code-area .lineno {
+    -fx-background-color: #313335;
+    -fx-text-fill: #606366;
+    -fx-padding: 0 5 0 5;
+    -fx-font-family: 'Consolas';
+    -fx-font-size: 12px;
+}
+
+/* Selection */
+.code-area .selection {
+    -fx-fill: #214283;
+}
+
+/* Caret */
+.code-area .caret {
+    -fx-stroke: #a9b7c6;
+} 
