@@ -88,6 +88,9 @@ public class HtmlHighlighter implements LanguageHighlighter {
         // Set up styling
         codeArea.getStylesheets().add(HtmlHighlighter.class.getResource("/css/html-keywords.css").toExternalForm());
         
+        // Apply CSS class to the CodeArea
+        codeArea.getStyleClass().add(getCssClass());
+        
         // Set font using CSS
         codeArea.setStyle("-fx-font-family: 'Consolas'; -fx-font-size: 14px;");
         

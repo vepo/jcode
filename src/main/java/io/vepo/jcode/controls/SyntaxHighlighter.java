@@ -61,6 +61,9 @@ public class SyntaxHighlighter {
         // Set up styling
         codeArea.getStylesheets().add(SyntaxHighlighter.class.getResource("/css/java-keywords.css").toExternalForm());
         
+        // Apply CSS class to the CodeArea
+        codeArea.getStyleClass().add("java-code");
+        
         // Set font using CSS
         codeArea.setStyle("-fx-font-family: 'Consolas'; -fx-font-size: 14px;");
         
