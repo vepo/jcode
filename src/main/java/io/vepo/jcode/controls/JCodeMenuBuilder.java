@@ -20,7 +20,10 @@ public interface JCodeMenuBuilder {
 
         var closeItem = new MenuItem();
         closeItem.setText("Close Workspace");
-        closeItem.setOnAction(evnt -> workbench.emit(new CloseWorkspaceEvent()));
+        closeItem.setOnAction(evnt -> {
+            // User-initiated close: emit event to clear preferences
+            workbench.emit(new CloseWorkspaceEvent());
+        });
         fileMenu.getItems().addAll(closeItem);
         
         fileMenu.getItems().add(new SeparatorMenuItem());

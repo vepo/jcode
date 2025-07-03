@@ -117,6 +117,12 @@ public class JCode extends Application {
         // Definir a cena no palco
         primaryStage.setScene(scene);
         updateWindowTitle(null);
+        
+        // Handle window close event to save workspace state
+        primaryStage.setOnCloseRequest(event -> {
+            WorkspaceViewBuilder.saveWorkspaceState(workspace);
+        });
+        
         primaryStage.show();
 
         workbench.subscribe(TaskStartedEvent.class, this::progressReporter);

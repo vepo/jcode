@@ -93,16 +93,19 @@ public class CssHighlighter implements LanguageHighlighter {
         // Set up line numbers
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
         
-        // Set up syntax highlighting
-        codeArea.multiPlainChanges()
-                .successionEnds(Duration.ofMillis(500))
-                .subscribe(ignore -> codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText())));
-        
         // Set up styling
         codeArea.getStylesheets().add(CssHighlighter.class.getResource("/css/css-keywords.css").toExternalForm());
         
         // Set font using CSS
         codeArea.setStyle("-fx-font-family: 'Consolas'; -fx-font-size: 14px;");
+        
+        // Set up syntax highlighting
+        codeArea.multiPlainChanges()
+                .successionEnds(Duration.ofMillis(500))
+                .subscribe(ignore -> codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText())));
+        
+        // Apply initial highlighting
+        codeArea.setStyleSpans(0, computeHighlighting(codeArea.getText()));
     }
 
     @Override

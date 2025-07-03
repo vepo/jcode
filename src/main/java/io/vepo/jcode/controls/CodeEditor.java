@@ -55,7 +55,6 @@ public class CodeEditor extends TabPane {
     private void createEditor(LoadedFileEvent event) {
         if (!tabsIndex.containsKey(event.file())) {
             var codeArea = new CodeArea(event.content());
-            codeArea.getStylesheets().add(JavaHighlighter.class.getResource("/css/java-keywords.css").toExternalForm());
             var pane = new VirtualizedScrollPane<CodeArea>(codeArea);
             
             // Configure syntax highlighting based on file extension
