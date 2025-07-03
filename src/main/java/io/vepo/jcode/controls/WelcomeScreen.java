@@ -1,13 +1,9 @@
 package io.vepo.jcode.controls;
 
-import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
-
 import java.io.File;
-import java.util.List;
-import java.util.prefs.Preferences;
 
-import io.vepo.jcode.events.WorkspaceOpenEvent;
 import io.vepo.jcode.Workbench;
+import io.vepo.jcode.services.WorkspaceService;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -27,11 +23,13 @@ public class WelcomeScreen extends BorderPane {
     private final Workbench workbench;
     private final Stage primaryStage;
     private final ListView<String> recentWorkspaces;
+    private final WorkspaceService workspaceService;
     
     public WelcomeScreen(Workbench workbench, Stage primaryStage) {
         this.workbench = workbench;
         this.primaryStage = primaryStage;
         this.recentWorkspaces = new ListView<>();
+        this.workspaceService = new WorkspaceService(workbench);
         
         setupUI();
         loadRecentWorkspaces();
@@ -178,41 +176,17 @@ public class WelcomeScreen extends BorderPane {
     
     private void openWorkspaceFromPath(String workspacePath) {
         File workspaceDir = new File(workspacePath);
-        if (workspaceDir.exists() && workspaceDir.isDirectory()) {
-            workbench.emit(new WorkspaceOpenEvent(workspaceDir));
-            addToRecentWorkspaces(workspacePath);
+        if (workspaceService.isValidWorkspace(workspaceDir)) {
+            workspaceService.openWorkspace(workspaceDir);
         }
     }
     
     private void loadRecentWorkspaces() {
-        var prefs = (io.vepo.jcode.preferences.JsonPreferences) preferences().userRoot().node("recentWorkspaces");
-        List<String> recent = prefs.getList("workspaces");
+        var recent = workspaceService.getRecentWorkspaces();
         
         recentWorkspaces.getItems().clear();
         if (recent != null && !recent.isEmpty()) {
             recentWorkspaces.getItems().addAll(recent);
         }
-    }
-    
-    private void addToRecentWorkspaces(String workspacePath) {
-        var prefs = (io.vepo.jcode.preferences.JsonPreferences) preferences().userRoot().node("recentWorkspaces");
-        List<String> recent = prefs.getList("workspaces");
-        
-        // Remove if already exists
-        if (recent != null) {
-            recent.remove(workspacePath);
-        } else {
-            recent = new java.util.ArrayList<>();
-        }
-        
-        // Add to beginning
-        recent.add(0, workspacePath);
-        
-        // Keep only last 10
-        if (recent.size() > 10) {
-            recent = recent.subList(0, 10);
-        }
-        
-        prefs.putList("workspaces", recent);
     }
 } 

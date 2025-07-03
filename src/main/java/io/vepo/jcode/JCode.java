@@ -1,239 +1,61 @@
 package io.vepo.jcode;
 
-import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.nio.file.Files;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.prefs.Preferences;
-import java.util.stream.Stream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.vepo.jcode.controls.CodeEditor;
-import io.vepo.jcode.controls.FixedSplitPaneBuilder;
 import io.vepo.jcode.controls.JCodeMenuBuilder;
-import io.vepo.jcode.controls.WelcomeScreen;
-import io.vepo.jcode.events.CloseWorkspaceEvent;
-import io.vepo.jcode.events.FileLoadEvent;
-import io.vepo.jcode.events.LoadedFileEvent;
-import io.vepo.jcode.events.TaskStartedEvent;
-import io.vepo.jcode.events.WorkspaceOpenEvent;
-import io.vepo.jcode.workspace.WorkspaceViewBuilder;
+import io.vepo.jcode.controllers.ApplicationController;
+import io.vepo.jcode.ui.UIManager;
 import javafx.application.Application;
-import javafx.concurrent.Task;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
-import jfxtras.styles.jmetro.JMetro;
-import jfxtras.styles.jmetro.Style;
 
-// https://edencoding.com/how-to-open-edit-sync-and-save-a-text-file-in-javafx/
+/**
+ * Main application class for jCode - a lightweight JavaFX code editor.
+ * Uses a clean architecture with separation of concerns through services and controllers.
+ */
 public class JCode extends Application {
     private static final Logger logger = LoggerFactory.getLogger(JCode.class);
 
-    private ProgressBar progressBar;
-    private Label statusMessage;
-    private Stage primaryStage;
-
-    Workbench workbench;
-    private StackPane workspace;
-    private CodeEditor codeEditor;
-    private WelcomeScreen welcomeScreen;
+    private Workbench workbench;
+    private UIManager uiManager;
+    private ApplicationController applicationController;
 
     public JCode() {
-        workbench = new Workbench();
+        this.workbench = new Workbench();
     }
 
     @Override
     public void start(Stage primaryStage) {
-        this.primaryStage = primaryStage;
-        BorderPane pane = new BorderPane();
-        pane.setTop(JCodeMenuBuilder.build(workbench));
-
-        Preferences windowPrefs = preferences().userRoot().node("window");
-        Rectangle2D screenBounds = Screen.getPrimary().getBounds();
-
-        double x = windowPrefs.getDouble("x", Double.NEGATIVE_INFINITY);
-        double y = windowPrefs.getDouble("y", Double.NEGATIVE_INFINITY);
-        if (x > 0) {
-            primaryStage.setX(x);
-        }
-
-        if (y > 0) {
-            primaryStage.setY(y);
-        }
-
-        Scene scene = new Scene(pane,
-                                windowPrefs.getDouble("width", screenBounds.getWidth() - 50),
-                                windowPrefs.getDouble("height", screenBounds.getHeight() - 50));
-        primaryStage.setMaximized(windowPrefs.getBoolean("maximized", true));
-
-        primaryStage.maximizedProperty()
-                    .addListener((observable, oldValue, newValue) -> windowPrefs.putBoolean("maximized", newValue));
-        primaryStage.xProperty()
-                    .addListener((observable, oldValue, newValue) -> {
-                        if (!primaryStage.isMaximized()) {
-                            windowPrefs.putDouble("x", newValue.doubleValue());
-                        }
-                    });
-        primaryStage.yProperty()
-                    .addListener((observable, oldValue, newValue) -> {
-                        if (!primaryStage.isMaximized()) {
-                            windowPrefs.putDouble("y", newValue.doubleValue());
-                        }
-                    });
-        scene.widthProperty()
-             .addListener((observable, oldValue, newValue) -> {
-                 if (!primaryStage.isMaximized()) {
-                     windowPrefs.putDouble("width", newValue.doubleValue());
-                 }
-             });
-        scene.heightProperty()
-             .addListener((observable, oldValue, newValue) -> {
-                 if (!primaryStage.isMaximized()) {
-                     windowPrefs.putDouble("height", newValue.doubleValue());
-                 }
-             });
-
-        JMetro jMetro = new JMetro(Style.DARK);
-        jMetro.setScene(scene);
+        logger.info("Starting jCode application...");
         
-        // Load custom CSS
-        scene.getStylesheets().add(getClass().getResource("/css/welcome-screen.css").toExternalForm());
-
-        codeEditor = new CodeEditor(workbench);
-        welcomeScreen = new WelcomeScreen(workbench, primaryStage);
-
-        workspace = WorkspaceViewBuilder.build(workbench);
-        
-        // Start with welcome screen
-        pane.setCenter(welcomeScreen);
-
-        HBox rule = new HBox();
-        progressBar = new ProgressBar();
-        statusMessage = new Label("Checking for Changes...");
-        rule.getChildren().add(new HBox(statusMessage, progressBar));
-
-        // Definir a cena no palco
-        primaryStage.setScene(scene);
-        updateWindowTitle(null);
-        
-        // Handle window close event to save workspace state
-        primaryStage.setOnCloseRequest(event -> {
-            WorkspaceViewBuilder.saveWorkspaceState(workspace);
-            codeEditor.saveOpenTabs();
-        });
-        
-        primaryStage.show();
-
-        workbench.subscribe(TaskStartedEvent.class, this::progressReporter);
-        workbench.subscribe(FileLoadEvent.class, this::loadFile);
-        workbench.subscribe(WorkspaceOpenEvent.class, this::onWorkspaceOpen);
-        workbench.subscribe(CloseWorkspaceEvent.class, this::onWorkspaceClose);
-        
-        // Try to restore last workspace
-        restoreLastWorkspace();
-    }
-
-    private void updateWindowTitle(String workspacePath) {
-        if (workspacePath != null) {
-            primaryStage.setTitle("jCode - " + workspacePath);
-        } else {
-            primaryStage.setTitle("jCode");
-        }
-    }
-
-    private void onWorkspaceOpen(WorkspaceOpenEvent event) {
-        updateWindowTitle(event.workspace().getAbsolutePath());
-        codeEditor.restoreOpenTabs();
-        
-        // Switch to workspace view
-        BorderPane pane = (BorderPane) primaryStage.getScene().getRoot();
-        pane.setCenter(FixedSplitPaneBuilder.build(workspace, codeEditor));
-    }
-
-    private void onWorkspaceClose(CloseWorkspaceEvent event) {
-        updateWindowTitle(null);
-        
-        // Switch back to welcome screen
-        BorderPane pane = (BorderPane) primaryStage.getScene().getRoot();
-        pane.setCenter(welcomeScreen);
-    }
-
-    private void loadFile(FileLoadEvent event) {
-        // Create a task to load the file asynchronously
-        Task<String> loadFileTask = new Task<>() {
-            @Override
-            protected String call() throws Exception {
-                try (BufferedReader reader = new BufferedReader(new FileReader(event.file()))) {
-                    // Use Files.lines() to calculate total lines - used for progress
-                    long lineCount;
-                    try (Stream<String> stream = Files.lines(event.file().toPath())) {
-                        lineCount = stream.count();
-                    }
-                    // Load in all lines one by one into a StringBuilder separated by "\n" -
-                    // compatible with TextArea
-                    String line;
-                    StringBuilder totalFile = new StringBuilder();
-                    long linesLoaded = 0;
-                    while ((line = reader.readLine()) != null) {
-                        totalFile.append(line);
-                        totalFile.append("\n");
-                        updateProgress(++linesLoaded, lineCount);
-                    }
-                    return totalFile.toString();
-                }
-            }
-        };
-        loadFileTask.setOnSucceeded(workerStateEvent -> {
-            try {
-                workbench.emit(new LoadedFileEvent(event.file(), loadFileTask.get()));
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            } catch (ExecutionException e) {
-                logger.error(String.format("Cannot read file! file={}", event.file()), e);
-            }
-        });
-        loadFileTask.setOnFailed(workerStateEvent -> {
-            statusMessage.setText("Failed to load file");
-        });
-        workbench.emit(new TaskStartedEvent(loadFileTask.progressProperty()));
-        loadFileTask.run();
-    }
-
-    private void progressReporter(TaskStartedEvent event) {
-        progressBar.progressProperty().bind(event.progress());
-    }
-    
-    private void restoreLastWorkspace() {
-        var prefs = (io.vepo.jcode.preferences.JsonPreferences) preferences().userRoot().node("recentWorkspaces");
-        List<String> recent = prefs.getList("workspaces");
-        
-        if (recent != null && !recent.isEmpty()) {
-            String lastWorkspace = recent.get(0);
-            File workspaceDir = new File(lastWorkspace);
-            if (workspaceDir.exists() && workspaceDir.isDirectory()) {
-                // Use Platform.runLater to ensure UI is ready
-                javafx.application.Platform.runLater(() -> {
-                    workbench.emit(new WorkspaceOpenEvent(workspaceDir));
-                });
-            }
+        try {
+            // Initialize UI components
+            uiManager = new UIManager(primaryStage, workbench);
+            
+            // Setup menu
+            BorderPane rootPane = (BorderPane) uiManager.getScene().getRoot();
+            rootPane.setTop(JCodeMenuBuilder.build(workbench));
+            
+            // Initialize application controller
+            applicationController = new ApplicationController(workbench, uiManager);
+            
+            // Set scene and show stage
+            primaryStage.setScene(uiManager.getScene());
+            primaryStage.show();
+            
+            // Initialize application
+            applicationController.initialize();
+            
+            logger.info("jCode application started successfully");
+            
+        } catch (Exception e) {
+            logger.error("Failed to start jCode application", e);
+            throw new RuntimeException("Application startup failed", e);
         }
     }
 
     public static void main(String[] args) {
         launch(args);
     }
-
 }
