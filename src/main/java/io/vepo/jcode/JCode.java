@@ -45,6 +45,7 @@ public class JCode extends Application {
 
     Workbench workbench;
     private StackPane workspace;
+    private CodeEditor codeEditor;
 
     public JCode() {
         workbench = new Workbench();
@@ -104,7 +105,7 @@ public class JCode extends Application {
         JMetro jMetro = new JMetro(Style.DARK);
         jMetro.setScene(scene);
 
-        CodeEditor codeEditor = new CodeEditor(workbench);
+        codeEditor = new CodeEditor(workbench);
 
         workspace = WorkspaceViewBuilder.build(workbench);
         pane.setCenter(FixedSplitPaneBuilder.build(workspace, codeEditor));
@@ -121,6 +122,7 @@ public class JCode extends Application {
         // Handle window close event to save workspace state
         primaryStage.setOnCloseRequest(event -> {
             WorkspaceViewBuilder.saveWorkspaceState(workspace);
+            codeEditor.saveOpenTabs();
         });
         
         primaryStage.show();
@@ -141,6 +143,7 @@ public class JCode extends Application {
 
     private void onWorkspaceOpen(WorkspaceOpenEvent event) {
         updateWindowTitle(event.workspace().getAbsolutePath());
+        codeEditor.restoreOpenTabs();
     }
 
     private void onWorkspaceClose(CloseWorkspaceEvent event) {

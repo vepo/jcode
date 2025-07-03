@@ -1,3 +1,4 @@
+/* This file is imported by all language CSS files, including markdown. */
 .css-code {
     -fx-font-family: 'Consolas';
     -fx-font-size: 14px;
@@ -72,4 +73,32 @@
 /* Caret */
 .css-code .caret {
     -fx-stroke: #a9b7c6;
+}
+
+.markdown-code-area {
+    -fx-background-color: #23272e;
+    -fx-font-family: 'Fira Mono', 'Consolas', 'Monaco', monospace;
+    -fx-font-size: 13px;
+    -fx-text-fill: #d8dee9;
+}
+.md-header {
+    -fx-fill: #81a1c1;
+    -fx-font-weight: bold;
+}
+.md-bold {
+    -fx-fill: #ebcb8b;
+    -fx-font-weight: bold;
+}
+.md-italic {
+    -fx-fill: #b48ead;
+    -fx-font-style: italic;
+}
+.md-code {
+    -fx-fill: #a3be8c;
+    -fx-font-family: 'Fira Mono', 'Consolas', 'Monaco', monospace;
+    -fx-background-color: #2e3440;
+}
+.md-link {
+    -fx-fill: #88c0d0;
+    -fx-underline: true;
 } 

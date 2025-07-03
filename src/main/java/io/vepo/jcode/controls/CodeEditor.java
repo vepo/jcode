@@ -1,5 +1,6 @@
 package io.vepo.jcode.controls;
 
+import static io.vepo.jcode.preferences.JCodePreferencesFactory.preferences;
 import static io.vepo.jcode.utils.FileId.idFromFile;
 import static java.util.stream.Collectors.toList;
 import static javafx.scene.layout.AnchorPane.setBottomAnchor;
@@ -11,11 +12,13 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.prefs.Preferences;
 
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.CodeArea;
 
 import io.vepo.jcode.Workbench;
+import io.vepo.jcode.events.FileLoadEvent;
 import io.vepo.jcode.events.LoadedFileEvent;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
@@ -26,12 +29,14 @@ import javafx.scene.layout.AnchorPane;
 public class CodeEditor extends TabPane {
 
     private final Map<File, Tab> tabsIndex;
+    private final Workbench workbench;
+    private static final String OPEN_TABS_KEY = "open-tabs";
 
     public CodeEditor(Workbench workbench) {
+        this.workbench = workbench;
         tabsIndex = new HashMap<>();
         workbench.subscribe(LoadedFileEvent.class, this::createEditor);
         getTabs().addListener(new ListChangeListener<Tab>() {
-
             @Override
             public void onChanged(Change<? extends Tab> c) {
                 while (c.next()) {
@@ -48,7 +53,6 @@ public class CodeEditor extends TabPane {
                     }
                 }
             }
-
         });
     }
 
@@ -89,5 +93,27 @@ public class CodeEditor extends TabPane {
             tabsIndex.put(event.file(), tab);
         }
         getSelectionModel().select(tabsIndex.get(event.file()));
+    }
+    
+    public void saveOpenTabs() {
+        Preferences editorPrefs = preferences().userRoot().node("editor");
+        String openTabs = tabsIndex.keySet().stream()
+                .map(File::getAbsolutePath)
+                .reduce("", (a, b) -> a.isEmpty() ? b : a + ";" + b);
+        editorPrefs.put(OPEN_TABS_KEY, openTabs);
+    }
+    
+    public void restoreOpenTabs() {
+        Preferences editorPrefs = preferences().userRoot().node("editor");
+        String openTabs = editorPrefs.get(OPEN_TABS_KEY, "");
+        if (!openTabs.isEmpty()) {
+            String[] filePaths = openTabs.split(";");
+            for (String filePath : filePaths) {
+                File file = new File(filePath);
+                if (file.exists() && file.isFile()) {
+                    workbench.emit(new FileLoadEvent(file));
+                }
+            }
+        }
     }
 }

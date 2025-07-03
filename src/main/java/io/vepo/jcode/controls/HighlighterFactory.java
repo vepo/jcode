@@ -15,6 +15,7 @@ public class HighlighterFactory {
         registerHighlighter(new JsonHighlighter());
         registerHighlighter(new CssHighlighter());
         registerHighlighter(new HtmlHighlighter());
+        registerHighlighter(new MarkdownHighlighter());
     }
     
     /**
@@ -37,6 +38,12 @@ public class HighlighterFactory {
         if (highlighter.supportsFileExtension("html")) {
             HIGHLIGHTERS.put("html", highlighter);
             HIGHLIGHTERS.put("htm", highlighter);
+        }
+        if (highlighter.supportsFileExtension("md")) {
+            HIGHLIGHTERS.put("md", highlighter);
+        }
+        if (highlighter.supportsFileExtension("markdown")) {
+            HIGHLIGHTERS.put("markdown", highlighter);
         }
     }
     
@@ -61,6 +68,22 @@ public class HighlighterFactory {
         }
         
         String extension = fileName.substring(lastDotIndex + 1);
-        return getHighlighter(extension);
+        switch (extension) {
+            case "java":
+                return Optional.of(new JavaHighlighter());
+            case "xml":
+                return Optional.of(new XmlHighlighter());
+            case "json":
+                return Optional.of(new JsonHighlighter());
+            case "css":
+                return Optional.of(new CssHighlighter());
+            case "html":
+                return Optional.of(new HtmlHighlighter());
+            case "md":
+            case "markdown":
+                return Optional.of(new MarkdownHighlighter());
+            default:
+                return Optional.empty();
+        }
     }
 } 
